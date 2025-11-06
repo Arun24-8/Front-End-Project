@@ -5,13 +5,19 @@ import Attendance from "./pages/Attendance.jsx";
 import Fees from "./pages/Fees.jsx";
 import Results from "./pages/Results.jsx";
 import Placeholder from "./pages/Placeholder.jsx";
+import Academics from "./pages/Academics.jsx";
+import Courses from "./pages/Courses.jsx";
+import Timetable from "./pages/Timetable.jsx";
+import HallTickets from "./pages/HallTickets.jsx";
+import Library from "./pages/Library.jsx";
+import Hostel from "./pages/Hostel.jsx";
 import { mockStudentData } from "./studentData.js";
 
-export default function Student_Dashboard() {
-	// ...existing logic...
+export default function Student_Dashboard({ onNavigate }) {
 	const [active, setActive] = useState("dashboard");
 	const [student, setStudent] = useState(null);
 	const [logoutOpen, setLogoutOpen] = useState(false);
+	const [animKey, setAnimKey] = useState(0); // force content re-animation
 
 	useEffect(() => {
 		// use persisted student data if available, else use mock
@@ -51,79 +57,82 @@ export default function Student_Dashboard() {
 			case "fees":
 			case "fee-payments": return <Fees />;
 			case "results": return <Results />;
-			case "academics": return <Placeholder label="Academic Records" />;
-			case "courses": return <Placeholder label="Courses" />;
-			case "timetable": return <Placeholder label="Time Table" />;
-			case "halltickets": return <Placeholder label="Hall Tickets" />;
-			case "library": return <Placeholder label="Library Services" />;
-			case "hostel": return <Placeholder label="Hostel Management" />;
+			case "academics": return <Academics />;
+			case "courses": return <Courses />;
+			case "timetable": return <Timetable />;
+			case "halltickets": return <HallTickets />;
+			case "library": return <Library />;
+			case "hostel": return <Hostel />;
 			default: return <Placeholder label={active} />;
 		}
+	};
+
+	const handleNav = (id) => {
+		if (id === active) return;
+		setActive(id);
+		// bump key to trigger CSS animation on content container
+		setAnimKey((k) => k + 1);
 	};
 
 	const openLogout = () => setLogoutOpen(true);
 	const closeLogout = () => setLogoutOpen(false);
 	const confirmLogout = () => {
-		closeLogout();
+		setLogoutOpen(false);
 		localStorage.removeItem("studentData");
 		setStudent(null);
-		// In integrated app, you may navigate back to Home/Login here
+		// navigate back to Home
+		if (typeof onNavigate === "function") {
+			onNavigate("/");
+		} else {
+			try { window.history.pushState({}, "", "/"); } catch {}
+		}
 	};
 
 	return (
 		<div className="student-portal-root">
-			<header className="header">
-				<div className="logo-section">
-					<div className="logo">KL</div>
-					<div className="university-info">
-						<h1>KL University</h1>
-						<p>Student Information System</p>
+			<header className="sd-header">
+				<div className="sd-left">
+					<div className="sd-logo">KL</div>
+					<div className="sd-title">
+						<div className="sd-name">KL University</div>
+						<div className="sd-sub">Student Information System</div>
 					</div>
 				</div>
 
-				<div className="user-info">
-					<div className="user-avatar">{student ? student.name.split(" ").map(n => n[0]).slice(0,2).join("") : "JS"}</div>
-					<div style={{ textAlign: "right" }}>
-						<div style={{ fontWeight: 600 }}>{student ? student.name : "Guest"}</div>
-						<div style={{ fontSize: 12, opacity: 0.8 }}>ID: {student ? student.id : "—"}</div>
+				<div className="sd-user">
+					<div className="sd-avatar">{student ? student.name.split(" ").map(n=>n[0]).slice(0,2).join("") : "G"}</div>
+					<div className="sd-meta">
+						<div className="sd-user-name">{student ? student.name : "Guest"}</div>
+						<div className="sd-user-id">ID: {student ? student.id : "—"}</div>
 					</div>
-					<button className="logout-btn" onClick={openLogout}>Logout</button>
+					<button className="sd-logout" onClick={openLogout}>Logout</button>
 				</div>
 			</header>
 
-			<div className="main-container">
-				<aside className="sidebar" aria-label="Main navigation">
+			<div className="sd-main">
+				<aside className="sd-sidebar" aria-label="Main navigation">
 					<h3>📚 Student Portal</h3>
 					{navItems.map(it => (
-						<div
-							key={it.id}
-							className={`nav-item ${active === it.id ? "active" : ""}`}
-							onClick={() => setActive(it.id)}
-							role="button"
-							tabIndex={0}
-							onKeyDown={(e) => e.key === "Enter" && setActive(it.id)}
-						>
-							<div className="nav-icon">{it.icon}</div>
-							<div className="nav-text">{it.label}</div>
+						<div key={it.id} className={`sd-nav-item ${active === it.id ? "active" : ""}`} onClick={() => handleNav(it.id)} role="button" tabIndex={0} onKeyDown={(e)=> e.key==="Enter" && handleNav(it.id)}>
+							<div className="sd-nav-icon">{it.icon}</div>
+							<div className="sd-nav-text">{it.label}</div>
 						</div>
 					))}
 				</aside>
 
-				<main className="content-area" role="main">
-					<div className="page-content active">
-						{renderContent()}
-					</div>
+				<main className="sd-content" key={animKey}>
+					<div className="sd-panel">{renderContent()}</div>
 				</main>
 			</div>
 
 			{logoutOpen && (
-				<div className="modal-overlay active" onClick={(e) => { if (e.target.classList.contains('modal-overlay')) closeLogout(); }}>
-					<div className="modal-box" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
-						<div className="modal-header" id="logoutTitle">Confirm Logout</div>
-						<div className="modal-body">Are you sure you want to log out of the student portal?</div>
-						<div className="modal-footer">
-							<button className="modal-btn modal-btn-cancel" onClick={closeLogout}>Cancel</button>
-							<button className="modal-btn modal-btn-confirm" onClick={confirmLogout}>Logout</button>
+				<div className="sd-modal-overlay" onClick={(e)=>{ if(e.target.classList && e.target.classList.contains('sd-modal-overlay')) closeLogout(); }}>
+					<div className="sd-modal">
+						<div className="sd-modal-h">Confirm Logout</div>
+						<div className="sd-modal-b">Are you sure you want to log out?</div>
+						<div className="sd-modal-f">
+							<button className="sd-cancel" onClick={closeLogout}>Cancel</button>
+							<button className="sd-confirm" onClick={confirmLogout}>Logout</button>
 						</div>
 					</div>
 				</div>
@@ -131,36 +140,43 @@ export default function Student_Dashboard() {
 
 			<style>{`
 				/* filepath: c:\\Users\\HP\\OneDrive\\Desktop\\FrontEnd\\Sdp-13\\src\\components\\Student\\Student_Dashboard.jsx */
-				.student-portal-root { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-				.header { background:#1e3a8a; color:white; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,0.1); flex-wrap:wrap; }
-				.logo-section { display:flex; align-items:center; gap:12px; }
-				.logo { width:50px; height:50px; background:white; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#1e3a8a; font-weight:700; }
-				.university-info h1 { margin:0; font-size:18px; font-weight:700; }
-				.university-info p { margin:0; font-size:12px; opacity:0.9; }
-				.user-info { display:flex; align-items:center; gap:12px; }
-				.user-avatar { width:40px; height:40px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; }
-				.logout-btn { background:#dc2626; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
-				.main-container { max-width:1400px; margin:24px auto; padding:0 24px; background:white; border-radius:12px; display:flex; min-height:600px; overflow:hidden; }
-				.sidebar { width:280px; padding:24px 16px; border-right:2px solid #e5e7eb; background:#f8fafc; border-radius:12px 0 0 12px; overflow:auto; }
-				.sidebar h3 { color:#1e3a8a; margin:0 0 16px 0; font-size:1.1rem; font-weight:600; border-bottom:2px solid #e5e7eb; padding-bottom:8px; }
-				.nav-item { display:flex; align-items:center; gap:12px; padding:12px; margin-bottom:8px; border-radius:8px; cursor:pointer; border-left:4px solid transparent; }
-				.nav-item:hover { background:white; border-left-color:#3b82f6; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
-				.nav-item.active { background:#dbeafe; border-left-color:#1d4ed8; color:#1d4ed8; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
-				.nav-icon { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; }
-				.nav-text { font-weight:500; color:#374151; }
-				.content-area { flex:1; padding:24px; background:white; border-radius:0 12px 12px 0; overflow:auto; min-width:0; }
-				.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:999; }
-				.modal-box { background:white; padding:20px; border-radius:12px; width:90%; max-width:420px; transform:scale(1); opacity:1; transition:all 180ms ease; }
-				.modal-header { font-size:18px; font-weight:700; color:#1e3a8a; margin-bottom:12px; }
-				.modal-body { color:#374151; margin-bottom:16px; }
-				.modal-footer { display:flex; justify-content:flex-end; gap:8px; }
-				.modal-btn { padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer; border:none; }
-				.modal-btn-cancel { background:#e5e7eb; color:#374151; }
-				.modal-btn-confirm { background:#dc2626; color:white; }
+				.student-portal-root { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; }
+				.sd-header { display:flex; justify-content:space-between; align-items:center; padding:18px 24px; color:#fff; }
+				.sd-left { display:flex; align-items:center; gap:14px; }
+				.sd-logo { width:56px; height:56px; background:#fff; color:#1e3a8a; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800; }
+				.sd-title .sd-name { font-weight:800; font-size:18px; }
+				.sd-sub { font-size:13px; opacity:0.9; }
+				.sd-user { display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.06); padding:8px 12px; border-radius:12px; }
+				.sd-avatar { width:44px; height:44px; background:#3b82f6; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; }
+				.sd-user-name { font-weight:700; }
+				.sd-user-id { font-size:12px; opacity:0.85; }
+				.sd-logout { margin-left:8px; background:#ff7b7b; border:none; color:#fff; padding:8px 12px; border-radius:10px; cursor:pointer; transition: transform 120ms; }
+				.sd-logout:hover { transform: translateY(-2px); }
+
+				.sd-main { max-width:1400px; margin:20px auto; background:#fff; border-radius:12px; display:flex; overflow:hidden; min-height:640px; box-shadow:0 12px 36px rgba(2,6,23,0.12); }
+				.sd-sidebar { width:280px; padding:20px; background:#f8fafc; border-right:1px solid #eef2f7; }
+				.sd-sidebar h3 { margin:0 0 14px 0; color:#1e3a8a; font-size:1.05rem; }
+				.sd-nav-item { display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; margin-bottom:8px; cursor:pointer; transition: all 200ms; }
+				.sd-nav-item:hover { background:#fff; transform: translateY(-2px); box-shadow:0 6px 18px rgba(2,6,23,0.04); }
+				.sd-nav-item.active { background:#dbeafe; border-left:4px solid #1d4ed8; color:#1d4ed8; }
+				.sd-nav-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+				.sd-content { flex:1; padding:22px; min-width:0; }
+				.sd-panel { animation: contentIn 360ms cubic-bezier(.2,.9,.2,1); }
+				@keyframes contentIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+				/* Modal */
+				.sd-modal-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:999; }
+				.sd-modal { background:#fff; padding:18px; border-radius:12px; width:90%; max-width:420px; box-shadow:0 12px 36px rgba(2,6,23,0.18); }
+				.sd-modal-h { font-size:16px; font-weight:800; color:#1e3a8a; margin-bottom:8px; }
+				.sd-modal-b { color:#374151; margin-bottom:14px; }
+				.sd-modal-f { display:flex; justify-content:flex-end; gap:8px; }
+				.sd-cancel { background:#f3f4f6; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+				.sd-confirm { background:#dc2626; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+
+				/* small responsive */
 				@media (max-width:900px) {
-					.main-container { margin:16px; flex-direction:column; padding:16px; }
-					.sidebar { width:100%; border-right:none; border-bottom:2px solid #e5e7eb; border-radius:12px 12px 0 0; }
-					.content-area { border-radius:0 0 12px 12px; padding:16px; }
+					.sd-main { flex-direction:column; }
+					.sd-sidebar { width:100%; border-right:none; border-bottom:1px solid #eef2f7; }
 				}
 			`}</style>
 		</div>

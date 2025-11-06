@@ -5,7 +5,7 @@ import Admin_StatGrid from "./Admin_StatGrid.jsx";
 import Admin_RecentActivities from "./Admin_RecentActivities.jsx";
 import Admin_Sections from "./Admin_Sections.jsx";
 
-export default function Admin_Dashboard() {
+export default function Admin_Dashboard({ onNavigate }) {
   const [active, setActive] = useState("dashboard");
   const [config, setConfig] = useState({
     app_title: "Admin Dashboard",
@@ -61,6 +61,24 @@ export default function Admin_Dashboard() {
       `}</style>
     </div>
   );
+
+  // add logout handler (clears admin session and navigates to home)
+	const handleLogout = () => {
+		try {
+			// remove any admin-specific data stored during session
+			localStorage.removeItem("adminData");
+		} catch (e) {
+			// ignore storage errors
+		}
+		// navigate back to home/login
+		if (typeof onNavigate === "function") {
+			onNavigate("/");
+		} else {
+			try { window.history.pushState({}, "", "/"); } catch (e) {}
+			// optionally reload to ensure state reset
+			window.location.reload();
+		}
+	};
 
   return (
     <div className="admin-page">

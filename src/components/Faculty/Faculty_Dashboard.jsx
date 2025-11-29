@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Faculty_Nav from "./Faculty_Nav.jsx";
 import Faculty_Header from "./Faculty_Header.jsx";
 import Faculty_Attendence from "./Faculty_Attendence.jsx";
@@ -7,7 +7,104 @@ import Faculty_RecentActivities from "./Faculty_RecentActivities.jsx";
 import Faculty_StudentDetails from "./Faculty_StudentDetails.jsx";
 
 export default function Faculty_Dashboard() {
+  const storageKey = "facultyCourses";
+  const [courses, setCourses] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [code, setCode] = useState("");
+  const [credits, setCredits] = useState("");
+  const [error, setError] = useState("");
   const [active, setActive] = useState("dashboard");
+
+  // assignments state
+  const assignKey = "facultyAssignments";
+  const [assignments, setAssignments] = useState([]);
+  const [showAsgForm, setShowAsgForm] = useState(false);
+  const [asgTitle, setAsgTitle] = useState("");
+  const [asgDesc, setAsgDesc] = useState("");
+  const [asgDue, setAsgDue] = useState("");
+  const [asgError, setAsgError] = useState("");
+  const [asgMsg, setAsgMsg] = useState("");
+
+  // new: mode for assignment creation (manual form or file upload)
+  const [asgMode, setAsgMode] = useState("manual"); // "manual" | "file"
+  const [asgFile, setAsgFile] = useState(null); // { name, type, dataUrl }
+  const [asgFileError, setAsgFileError] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setCourses(JSON.parse(raw));
+      else {
+        const initial = [
+          { id: "C001", title: "Intro to Programming", code: "CS101", credits: 3 },
+          { id: "C002", title: "Data Structures", code: "CS201", credits: 4 }
+        ];
+        setCourses(initial);
+        localStorage.setItem(storageKey, JSON.stringify(initial));
+      }
+    } catch (e) {
+      setCourses([]);
+    }
+  }, []);
+
+  // load assignments from localStorage
+  useEffect(() => {
+    try {
+      const rawAsg = localStorage.getItem(assignKey);
+      if (rawAsg) setAssignments(JSON.parse(rawAsg));
+      else {
+        const initAsg = [];
+        setAssignments(initAsg);
+        localStorage.setItem(assignKey, JSON.stringify(initAsg));
+      }
+    } catch (e) {
+      setAssignments([]);
+    }
+  }, []);
+
+  const persist = (next) => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+    } catch (e) {
+      // ignore storage errors
+    }
+  };
+
+  const persistAssignments = (next) => {
+    try {
+      localStorage.setItem(assignKey, JSON.stringify(next));
+    } catch (e) {}
+  };
+
+  const handleAdd = (e) => {
+    if (e && e.preventDefault) e.preventDefault(); // ensure no accidental submit
+    setError("");
+    if (!title.trim() || !code.trim() || !credits.toString().trim()) {
+      setError("Please fill all fields.");
+      return;
+    }
+    const numericCredits = Number(credits);
+    if (!Number.isFinite(numericCredits) || numericCredits <= 0) {
+      setError("Credits must be a positive number.");
+      return;
+    }
+    const id = `C${String(Date.now()).slice(-6)}`;
+    const newCourse = { id, title: title.trim(), code: code.trim().toUpperCase(), credits: numericCredits };
+    const next = [newCourse, ...courses];
+    setCourses(next);
+    persist(next);
+    setTitle("");
+    setCode("");
+    setCredits("");
+    setShowForm(false); // close form, do not create extra buttons
+  };
+
+  const handleRemove = (id) => {
+    const next = courses.filter((c) => c.id !== id);
+    setCourses(next);
+    persist(next);
+  };
 
   const handleNavigate = (id) => setActive(id);
   const handleLogout = () => {
@@ -26,6 +123,99 @@ export default function Faculty_Dashboard() {
       {subtitle && <div className="stat-card-subtitle">{subtitle}</div>}
     </div>
   );
+
+  // updated: handle file selection and convert to data URL
+  const handleFileChange = (e) => {
+    setAsgFileError("");
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      setAsgFile(null);
+      return;
+    }
+    // small size guard (e.g., 5MB)
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setAsgFileError("File is too large (max 5MB).");
+      setAsgFile(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAsgFile({
+        name: file.name,
+        type: file.type,
+        dataUrl: reader.result
+      });
+    };
+    reader.onerror = () => {
+      setAsgFileError("Failed to read file.");
+      setAsgFile(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // assignment handlers
+  const handleAddAssignment = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setAsgError("");
+    setAsgFileError("");
+
+    if (asgMode === "manual") {
+      if (!asgTitle.trim() || !asgDesc.trim() || !asgDue.trim()) {
+        setAsgError("Please fill all assignment fields.");
+        return;
+      }
+      const id = `A${String(Date.now()).slice(-6)}`;
+      const newAsg = { id, title: asgTitle.trim(), description: asgDesc.trim(), due: asgDue, createdAt: new Date().toISOString(), source: "manual" };
+      const next = [newAsg, ...assignments];
+      setAssignments(next);
+      persistAssignments(next);
+      setAsgTitle("");
+      setAsgDesc("");
+      setAsgDue("");
+      setShowAsgForm(false);
+      setAsgMsg("Assignment created");
+      setTimeout(() => setAsgMsg(""), 1600);
+      return;
+    }
+
+    // file mode
+    if (asgMode === "file") {
+      if (!asgFile) {
+        setAsgFileError("Please select a file to upload.");
+        return;
+      }
+      const id = `A${String(Date.now()).slice(-6)}`;
+      const newAsg = {
+        id,
+        title: asgFile.name,
+        description: `File assignment: ${asgFile.name}`,
+        due: asgDue || "",
+        createdAt: new Date().toISOString(),
+        source: "file",
+        file: {
+          name: asgFile.name,
+          type: asgFile.type,
+          dataUrl: asgFile.dataUrl
+        }
+      };
+      const next = [newAsg, ...assignments];
+      setAssignments(next);
+      persistAssignments(next);
+      setAsgFile(null);
+      setAsgDue("");
+      setShowAsgForm(false);
+      setAsgMsg("File assignment added");
+      setTimeout(() => setAsgMsg(""), 1600);
+      return;
+    }
+  };
+
+  const handleRemoveAssignment = (id) => {
+    const next = assignments.filter(a => a.id !== id);
+    setAssignments(next);
+    persistAssignments(next);
+  };
 
   return (
     <div className="faculty-page">
@@ -316,6 +506,182 @@ export default function Faculty_Dashboard() {
                   </button>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* New Courses Section */}
+          <section
+            className={`section ${active === "courses" ? "active" : ""}`}
+          >
+            <div style={{ padding: 20, maxWidth: 1000, margin: "0 auto", boxSizing: "border-box" }}>
+              <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                <div>
+                  <h1 style={{ margin: 0 }}>Faculty — Courses</h1>
+                  <div style={{ color: "#6b7280", fontSize: 14 }}>Manage courses for your classes</div>
+                </div>
+                <div>
+                  <button type="button" onClick={() => setShowForm((s) => !s)} style={{ padding: "10px 14px", borderRadius: 8, border: "none", background: "#4f46e5", color: "#fff", fontWeight: 700, cursor: "pointer", marginRight: 8 }}>
+                    {showForm ? "Close" : "Add Course"}
+                  </button>
+                  <button type="button" onClick={() => setShowAsgForm(s => !s)} style={{ padding: "10px 14px", borderRadius: 8, border: "none", background: "#0ea5a9", color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                    {showAsgForm ? "Close" : "Create Assignment"}
+                  </button>
+                </div>
+              </header>
+
+              {showForm && (
+                <form onSubmit={handleAdd} style={{ marginBottom: 18, background: "#fff", padding: 16, borderRadius: 10, boxShadow: "0 8px 24px rgba(2,6,23,0.06)" }}>
+                  <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 160px 120px", alignItems: "end" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Course Title</label>
+                      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Advanced Algorithms" style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e6eef8" }} />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Course Code</label>
+                      <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. CS301" style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e6eef8" }} />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Credits</label>
+                      <input value={credits} onChange={(e) => setCredits(e.target.value)} placeholder="3" style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e6eef8" }} />
+                    </div>
+                  </div>
+
+                  {error && <div style={{ color: "#b91c1c", marginTop: 10 }}>{error}</div>}
+
+                  <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                    <button type="submit" style={{ padding: "10px 14px", borderRadius: 8, border: "none", background: "#059669", color: "#fff", fontWeight: 700, cursor: "pointer" }}>Save Course</button>
+                    <button type="button" onClick={() => setShowForm(false)} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid #e6eef8", background: "#fff", cursor: "pointer" }}>Cancel</button>
+                  </div>
+                </form>
+              )}
+
+              <section>
+                <h2 style={{ marginTop: 0, marginBottom: 12 }}>Courses ({courses.length})</h2>
+                {courses.length === 0 ? (
+                  <div style={{ padding: 20, borderRadius: 8, background: "#fff", boxShadow: "0 8px 24px rgba(2,6,23,0.04)" }}>No courses yet. Click "Add Course" to create one.</div>
+                ) : (
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {courses.map((c) => (
+                      <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 8px 20px rgba(2,6,23,0.04)" }}>
+                        <div>
+                          <div style={{ fontWeight: 800 }}>{c.title}</div>
+                          <div style={{ color: "#6b7280", marginTop: 6 }}>{c.code} • {c.credits} credits</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button type="button" onClick={() => navigator.clipboard?.writeText(`${c.code} - ${c.title}`)} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e6eef8", background: "#fff", cursor: "pointer" }}>Copy</button>
+                          <button type="button" onClick={() => handleRemove(c.id)} style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: "#ef4444", color: "#fff", cursor: "pointer" }}>Remove</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          </section>
+
+          {/* Assignments Section */}
+          <section
+            className={`section ${active === "assignments" ? "active" : ""}`}
+          >
+            <div style={{ padding: 20, maxWidth: 1000, margin: "0 auto", boxSizing: "border-box" }}>
+              <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                <div>
+                  <h1 style={{ margin: 0 }}>Faculty — Assignments</h1>
+                  <div style={{ color: "#6b7280", fontSize: 14 }}>Manage assignments and exams for your courses</div>
+                </div>
+                <div>
+                  <button type="button" onClick={() => setShowAsgForm(s => !s)} style={{ padding: "10px 14px", borderRadius: 8, border: "none", background: "#0ea5a9", color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                    {showAsgForm ? "Close" : "Create Assignment"}
+                  </button>
+                </div>
+              </header>
+
+              {showAsgForm && (
+                <form onSubmit={handleAddAssignment} style={{ marginBottom: 18, background: "#fff", padding: 16, borderRadius: 10, boxShadow: "0 8px 24px rgba(2,6,23,0.06)" }}>
+                {/* mode selector */}
+                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="radio" name="asgMode" value="manual" checked={asgMode === "manual"} onChange={() => setAsgMode("manual")} />
+                    <span>Manual</span>
+                  </label>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="radio" name="asgMode" value="file" checked={asgMode === "file"} onChange={() => setAsgMode("file")} />
+                    <span>Upload file</span>
+                  </label>
+                </div>
+
+                {asgMode === "manual" ? (
+                  <div style={{ display: "grid", gap: 12 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Assignment Title</label>
+                      <input value={asgTitle} onChange={(e) => setAsgTitle(e.target.value)} placeholder="Assignment title" style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e6eef8" }} />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Description</label>
+                      <textarea value={asgDesc} onChange={(e) => setAsgDesc(e.target.value)} placeholder="Brief description" rows={3} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #e6eef8" }} />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Due Date</label>
+                      <input type="date" value={asgDue} onChange={(e) => setAsgDue(e.target.value)} style={{ width: "200px", padding: 10, borderRadius: 8, border: "1px solid #e6eef8" }} />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gap: 12 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Select file (max 5MB)</label>
+                      <input type="file" accept="*" onChange={handleFileChange} />
+                      {asgFile && <div style={{ marginTop: 8, color: "#374151" }}>{asgFile.name} ({asgFile.type})</div>}
+                      {asgFileError && <div style={{ color: "#b91c1c", marginTop: 8 }}>{asgFileError}</div>}
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Optional Due Date</label>
+                      <input type="date" value={asgDue} onChange={(e) => setAsgDue(e.target.value)} style={{ width: "200px", padding: 10, borderRadius: 8, border: "1px solid #e6eef8" }} />
+                    </div>
+                  </div>
+                )}
+
+                {(asgError) && <div style={{ color: "#b91c1c", marginTop: 10 }}>{asgError}</div>}
+
+                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                  <button type="submit" style={{ padding: "10px 14px", borderRadius: 8, border: "none", background: "#0ea5a9", color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                    {asgMode === "manual" ? "Create Assignment" : "Upload & Create"}
+                  </button>
+                  <button type="button" onClick={() => setShowAsgForm(false)} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid #e6eef8", background: "#fff", cursor: "pointer" }}>Cancel</button>
+                </div>
+              </form>
+              )}
+
+              <section style={{ marginTop: 28 }}>
+                <h2 style={{ marginTop: 0, marginBottom: 12 }}>Assignments ({assignments.length})</h2>
+                {assignments.length === 0 ? (
+                  <div style={{ padding: 16, borderRadius: 8, background: "#fff", boxShadow: "0 8px 24px rgba(2,6,23,0.04)" }}>No assignments yet. Click "Create Assignment" to add one.</div>
+                ) : (
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {assignments.map(a => (
+                      <div key={a.id} style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 8px 20px rgba(2,6,23,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontWeight: 800 }}>{a.title}</div>
+                          <div style={{ color: "#6b7280", marginTop: 6 }}>{a.description}</div>
+                          <div style={{ color: "#98a0ad", marginTop: 8 }}>Due: {a.due || "N/A"}</div>
+                          {a.source === "file" && a.file && (
+                            <div style={{ marginTop: 8 }}>
+                              <strong>File:</strong> {a.file.name} ({a.file.type})
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button type="button" onClick={() => navigator.clipboard?.writeText(`${a.title} - due ${a.due || "N/A"}`)} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e6eef8", background: "#fff", cursor: "pointer" }}>Copy</button>
+                          <button type="button" onClick={() => handleRemoveAssignment(a.id)} style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: "#ef4444", color: "#fff", cursor: "pointer" }}>Remove</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {asgMsg && <div style={{ marginTop: 12, color: "#059669", fontWeight: 700 }}>{asgMsg}</div>}
+              </section>
+
             </div>
           </section>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Admin_Login({ onNavigate }) {
 	const [userId, setUserId] = useState("");
@@ -6,23 +6,44 @@ export default function Admin_Login({ onNavigate }) {
 	const [err, setErr] = useState("");
 	const [remember, setRemember] = useState(false);
 
-	// allowed admin credentials for local testing
+	const capchCharsA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	const [runCpach, setCapcha] = useState("");
+	const [enteredCaptcha, setEnteredCaptcha] = useState("");
+	const [captchaError, setCaptchaError] = useState("");
+
+	useEffect(() => { generateCaptcha(); }, []);
+	function generateCaptcha() {
+		let s = ""; for (let i=0;i<6;i++) s += capchCharsA[Math.floor(Math.random()*capchCharsA.length)];
+		setCapcha(s); setEnteredCaptcha(""); setCaptchaError("");
+	}
+
+	
 	const allowedAdmins = [
-		{ username: "admin", password: "admin123" },
-		{ username: "superadmin", password: "super1234" }
+		{ username: "32926", password: "admin@123" }
 	];
 
 	const handleSignIn = async (e) => {
 		if (e && e.preventDefault) e.preventDefault();
 		setErr("");
-		if (!userId.trim()) { setErr("Please enter User ID."); return; }
-		if (!password.trim()) { setErr("Please enter Password."); return; }
-		if (password.length < 6) { setErr("Password must be at least 6 characters."); return; }
+		if (!enteredCaptcha.trim()) { setErr("Please enter verification code."); return; }
+		if (enteredCaptcha !== runCpach) { setErr("The verification code is incorrect."); return; }
+		if (!userId.trim()) {
+			setErr("Please enter User ID.");
+			return;
+		}
+		if (!password.trim()) {
+			setErr("Please enter Password.");
+			return;
+		}
+		if (password.length < 6) {
+			setErr("Password must be at least 6 characters.");
+			return;
+		}
 
 		const ok = allowedAdmins.find(u => u.username === userId && u.password === password);
 		if (!ok) { setErr("Invalid username or password."); return; }
 
-		try { localStorage.setItem("adminData", JSON.stringify({ id: userId })); } catch {}
+		try { localStorage.setItem("adminData", JSON.stringify({ id: "32926" })); } catch {}
 		if (typeof onNavigate === "function") onNavigate("/admin"); else try { window.history.pushState({}, "", "/admin"); } catch {}
 	};
 
@@ -74,9 +95,23 @@ export default function Admin_Login({ onNavigate }) {
 							onChange={(e) => setPassword(e.target.value)}
 							onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
 							placeholder="Enter your password"
-							style={{ width: "100%", padding: 12, borderRadius: 10, border: "1px solid #e6eef8", outline: "none", fontSize: 14 }}
+							style={{ width: "100%", padding: 12, borderRadius: 10, border: "1px solid #e6eef8" }}
 						/>
 					</div>
+
+					<div style={{ background: "#f8fafc", border: "1px solid #e6eef8", padding: 10, borderRadius: 8, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+						<div style={{ fontSize: 13, color: "#374151" }}>
+							<strong>Demo:</strong> 32926 / admin@123
+						</div>
+						<button type="button" onClick={() => { try { navigator.clipboard.writeText("32926:admin@123"); } catch{} }} style={{ padding: "6px 10px", borderRadius: 8, border: "none", background: "#eef2ff", color: "#4f46e5", cursor: "pointer", fontWeight:700 }}>Copy</button>
+					</div>
+
+					<div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12 }}>
+						<input readOnly value={runCpach} style={{ padding:10, borderRadius:8, border:"1px solid #e6eef8", width:120, textAlign:"center", background:"#f3f4f6" }} />
+						<button type="button" onClick={generateCaptcha} style={{ padding:"8px 10px", borderRadius:8, border:"none", background:"#efefef", cursor:"pointer" }}>🔄</button>
+						<input placeholder="Enter verification Code" value={enteredCaptcha} onChange={(e)=>setEnteredCaptcha(e.target.value)} style={{ flex:1, padding:10, borderRadius:8, border:"1px solid #e6eef8" }} />
+					</div>
+					{captchaError && <div style={{ color:"#b91c1c", marginBottom:12 }}>{captchaError}</div>}
 
 					<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 8 }}>
 						<label style={{ display: "flex", alignItems: "center", gap: 8, color: "#374151", cursor: "pointer" }}>
@@ -92,6 +127,11 @@ export default function Admin_Login({ onNavigate }) {
 						<button onClick={handleSignIn} style={{ width: "100%", padding: 12, borderRadius: 10, border: "none", background: "linear-gradient(90deg,#16a34a,#059669)", color: "#fff", fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 22px rgba(6,95,70,0.12)" }}>
 							Sign In
 						</button>
+					</div>
+
+					<div style={{ background: "#fff7f0", padding:10, borderRadius:8, marginTop:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+						<div style={{ fontWeight:700 }}>Demo: 32926 / admin@123</div>
+						<button type="button" onClick={() => { try { navigator.clipboard.writeText("32926:admin@123"); } catch{} }} style={{ padding:"6px 10px", borderRadius:8, border:"none", background:"#fff", cursor:"pointer" }}>Copy</button>
 					</div>
 				</div>
 			</div>

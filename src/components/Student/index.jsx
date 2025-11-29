@@ -1,2 +1,2 @@
-export { default } from "./Student_login.jsx";
+export { default } from "./StudentLogin.jsx";
 

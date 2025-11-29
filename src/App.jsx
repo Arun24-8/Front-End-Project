@@ -3,7 +3,7 @@ import Admin_Login from "./components/Admin/Admin_Login.jsx";
 import Admin_Dashboard from "./components/Admin/Admin_Dashboard.jsx";
 import Faculty_Dashboard from "./components/Faculty/Faculty_Dashboard.jsx";
 import Faculty_Login from "./components/Faculty/Faculty_Login.jsx";
-import Student_Login from "./components/Student/Student_login.jsx";
+import Student_Login from "./components/Student/StudentLogin.jsx";
 import Home_Dashboard from "./components/Home/Home_Dashboard.jsx";
 
 // Small runtime-safe loader: imports module and renders it or fallback on error

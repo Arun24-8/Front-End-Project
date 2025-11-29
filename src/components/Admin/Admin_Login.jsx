@@ -1,104 +1,106 @@
 import React, { useState } from "react";
 
 export default function Admin_Login({ onNavigate }) {
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
+	const [userId, setUserId] = useState("");
+	const [password, setPassword] = useState("");
+	const [err, setErr] = useState("");
+	const [remember, setRemember] = useState(false);
 
-  const handleSignIn = async () => {
-    setErr("");
-    if (!userId.trim() || !password.trim()) {
-      setErr("Please enter User ID and Password.");
-      return;
-    }
-    setLoading(true);
-    // simulated auth delay
-    await new Promise((r) => setTimeout(r, 450));
-    setLoading(false);
-    // for dev accept any non-empty credentials
-    if (typeof onNavigate === "function") onNavigate("/admin");
-  };
+	// allowed admin credentials for local testing
+	const allowedAdmins = [
+		{ username: "admin", password: "admin123" },
+		{ username: "superadmin", password: "super1234" }
+	];
 
-  return (
-    <div className="login-root">
-      <div className="login-wrap">
-        <div className="login-card" role="region" aria-label="Admin sign in">
-          <div className="brand">
-            <div className="logo">KL</div>
-            <div className="brand-text">
-              <div className="brand-title">Admin Portal</div>
-              <div className="brand-sub">Manage users and system settings</div>
-            </div>
-          </div>
+	const handleSignIn = async (e) => {
+		if (e && e.preventDefault) e.preventDefault();
+		setErr("");
+		if (!userId.trim()) { setErr("Please enter User ID."); return; }
+		if (!password.trim()) { setErr("Please enter Password."); return; }
+		if (password.length < 6) { setErr("Password must be at least 6 characters."); return; }
 
-          <h3 className="heading">Sign in to your admin account</h3>
+		const ok = allowedAdmins.find(u => u.username === userId && u.password === password);
+		if (!ok) { setErr("Invalid username or password."); return; }
 
-          <div className="form">
-            <label className="label">
-              User ID
-              <input
-                className="input"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                placeholder="admin@kl.edu"
-                onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
-              />
-            </label>
+		try { localStorage.setItem("adminData", JSON.stringify({ id: userId })); } catch {}
+		if (typeof onNavigate === "function") onNavigate("/admin"); else try { window.history.pushState({}, "", "/admin"); } catch {}
+	};
 
-            <label className="label">
-              Password
-              <input
-                className="input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
-                onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
-              />
-            </label>
+	return (
+		<div style={{ minHeight: "100vh", display: "flex", gap: 24, alignItems: "stretch", padding: 20, boxSizing: "border-box", fontFamily: "Segoe UI, Inter, system-ui" }}>
+			<div style={{ flex: 1, background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 12, padding: 18 }}>
+				<img src="/src/components/Home/kl logo.jpg" alt="KLU" style={{ maxWidth: "70%", height: "auto", display: "block" }} />
+			</div>
 
-            {err && <div className="error">{err}</div>}
+			<div style={{ width: "100%", maxWidth: 480, display: "flex", alignItems: "center", justifyContent: "center" }}>
+				<div style={{
+					width: "100%",
+					background: "#fff",
+					padding: 28,
+					borderRadius: 12,
+					boxShadow: "0 18px 40px rgba(2,6,23,0.06)",
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "center",
+					alignItems: "stretch",
+					minHeight: 560,
+					height: "68vh",
+					boxSizing: "border-box"
+				}}>
+					<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+						<div style={{ width: 56, height: 56, borderRadius: 10, background: "linear-gradient(90deg,#4f46e5,#7c3aed)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>KL</div>
+						<div>
+							<div style={{ fontSize: 18, fontWeight: 800 }}>Admin Portal</div>
+							<div style={{ color: "#6b7280", fontSize: 13 }}>Manage the system and users</div>
+						</div>
+					</div>
 
-            <button
-              className={`btn ${loading ? "btn-loading" : ""}`}
-              onClick={handleSignIn}
-              disabled={loading}
-              aria-busy={loading}
-            >
-              {loading ? "Signing in…" : "Sign In"}
-            </button>
+					<div style={{ marginBottom: 12 }}>
+						<label style={{ display: "block", fontWeight: 700, color: "#374151", marginBottom: 6 }}>User ID</label>
+						<input
+							value={userId}
+							onChange={(e) => setUserId(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+							placeholder="admin@university.edu"
+							style={{ width: "100%", padding: 12, borderRadius: 10, border: "1px solid #e6eef8", outline: "none", fontSize: 14 }}
+						/>
+					</div>
 
-            <div className="hint">
-              Tip: any non-empty credentials work for development.
-            </div>
-          </div>
-        </div>
-      </div>
+					<div style={{ marginBottom: 8 }}>
+						<label style={{ display: "block", fontWeight: 700, color: "#374151", marginBottom: 6 }}>Password</label>
+						<input
+							type="password"
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+							placeholder="Enter your password"
+							style={{ width: "100%", padding: 12, borderRadius: 10, border: "1px solid #e6eef8", outline: "none", fontSize: 14 }}
+						/>
+					</div>
 
-      <style>{`
-        /* filepath: c:\\Users\\HP\\OneDrive\\Desktop\\FrontEnd\\Sdp-13\\src\\components\\Admin\\Admin_Login.jsx */
-        .login-root { min-height: calc(100vh - 40px); display:flex; align-items:center; justify-content:center; padding:24px; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#eef2ff 0%,#f8fafc 100%); }
-        .login-wrap { width:100%; max-width:520px; }
-        .login-card { background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 12px 30px rgba(2,6,23,0.08); transform: translateY(6px); animation: cardIn 360ms ease-out both; }
-        @keyframes cardIn { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: translateY(0); } }
-        .brand { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
-        .logo { width:56px; height:56px; background:#1e3a8a; color:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
-        .brand-title { font-weight:800; color:#0f172a; font-size:18px; }
-        .brand-sub { font-size:13px; color:#6b7280; }
-        .heading { margin: 8px 0 16px 0; color:#0f172a; }
-        .form { display:flex; flex-direction:column; gap:12px; }
-        .label { font-size:13px; color:#374151; display:flex; flex-direction:column; gap:8px; font-weight:600; }
-        .input { padding:12px 14px; border-radius:10px; border:1px solid #e6eef8; outline:none; box-shadow: inset 0 1px 2px rgba(2,6,23,0.03); transition: box-shadow 160ms, border-color 160ms, transform 160ms; font-size:15px; }
-        .input:focus { border-color:#3b82f6; box-shadow: 0 6px 18px rgba(59,130,246,0.08); transform: translateY(-1px); }
-        .error { background:#fff5f5; color:#b91c1c; border:1px solid #fecaca; padding:10px; border-radius:8px; font-weight:600; }
-        .btn { margin-top:6px; background: linear-gradient(90deg,#1e3a8a,#3b82f6); color:#fff; border:none; padding:12px 14px; font-weight:800; border-radius:12px; cursor:pointer; transition: transform 120ms ease, box-shadow 120ms ease; box-shadow: 0 8px 24px rgba(59,130,246,0.12); }
-        .btn:hover { transform: translateY(-2px); }
-        .btn:active { transform: translateY(0); }
-        .btn-loading { opacity:0.95; }
-        .hint { color:#6b7280; font-size:13px; margin-top:8px; }
-        @media (max-width:600px) { .login-card { padding:18px; } }
+					<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 8 }}>
+						<label style={{ display: "flex", alignItems: "center", gap: 8, color: "#374151", cursor: "pointer" }}>
+							<input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+							<span style={{ fontSize: 13 }}>Remember me</span>
+						</label>
+						<a href="#" style={{ color: "#4f46e5", textDecoration: "none", fontSize: 13 }} onClick={(e) => e.preventDefault()}>Forgot?</a>
+					</div>
+
+					{err && <div style={{ marginTop: 12, color: "#b91c1c", fontWeight: 700 }}>{err}</div>}
+
+					<div style={{ marginTop: 16 }}>
+						<button onClick={handleSignIn} style={{ width: "100%", padding: 12, borderRadius: 10, border: "none", background: "linear-gradient(90deg,#16a34a,#059669)", color: "#fff", fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 22px rgba(6,95,70,0.12)" }}>
+							Sign In
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<style>{`
+        @media (max-width:900px){
+          div[style*="minHeight:"]{flex-direction:column}
+        }
       `}</style>
-    </div>
-  );
+		</div>
+	);
 }

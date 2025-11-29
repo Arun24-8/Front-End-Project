@@ -11,7 +11,10 @@ export default function Admin_Dashboard({ onNavigate }) {
 		app_title: "Admin Dashboard",
 		institution_name: "KL University",
 		admin_name: "Dr. Rajesh Kumar",
-		admin_id: "ADM001",
+		admin_id: "32926",
+		admin_password: "admin@123",
+		// demo_credentials used across admin/login UI
+		demo_credentials: "32926 / admin@123",
 		welcome_message: "Welcome to the admin dashboard",
 		primary_color: "#667eea",
 		secondary_color: "#764ba2",

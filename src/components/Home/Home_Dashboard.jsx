@@ -1,11 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const Home_Dashboard = ({ onNavigate }) => {
   const [showRoles, setShowRoles] = useState(false);
+  const [toast, setToast] = useState({ show: false, msg: "" });
 
   const handleLoginClick = () => setShowRoles(true);
   const handleHomeClick = () => setShowRoles(false);
 
+  useEffect(() => {
+    function handleGlobalClick(e) {
+      const btn =
+        e.target.closest &&
+        (e.target.closest('[data-action="save-attendance"]') ||
+          e.target.closest(".save-attendance"));
+      if (!btn) return;
+      const cls = btn.dataset.classId || btn.getAttribute("data-class") || null;
+      const date = btn.dataset.date || new Date().toISOString().slice(0, 10);
+      const record = { class: cls, date, savedAt: new Date().toISOString() };
+      try {
+        const raw = localStorage.getItem("attendanceRecords");
+        const arr = raw ? JSON.parse(raw) : [];
+        arr.push(record);
+        localStorage.setItem("attendanceRecords", JSON.stringify(arr));
+      } catch (err) {
+        // ignore storage errors
+      }
+      setToast({ show: true, msg: "Attendance saved" });
+      setTimeout(() => setToast({ show: false, msg: "" }), 1800);
+    }
+    document.addEventListener("click", handleGlobalClick);
+    return () => document.removeEventListener("click", handleGlobalClick);
+  }, []);
   return (
     <div className="app-container">
       <header>
@@ -90,6 +115,8 @@ const Home_Dashboard = ({ onNavigate }) => {
         </div>
       </main>
 
+      <div className={`global-toast ${toast.show ? "show" : ""}`} role="status" aria-live="polite">{toast.msg}</div>
+
       <style>{`
         *{box-sizing:border-box}
         body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#eef2ff,#f5f3ff);color:#1f2937}
@@ -146,6 +173,24 @@ const Home_Dashboard = ({ onNavigate }) => {
         .role .emoji{font-size:28px;width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.02))}
         .role h3{margin:0;font-size:16px}
         .role p{margin:0;color:#374151;font-size:14px}
+
+        .global-toast{
+          position:fixed;
+          bottom:24px;
+          left:50%;
+          transform:translateX(-50%) translateY(12px);
+          background:rgba(15,23,42,0.95);
+          color:#fff;
+          padding:10px 16px;
+          border-radius:10px;
+          box-shadow:0 12px 30px rgba(2,6,23,0.18);
+          opacity:0;
+          pointer-events:none;
+          transition:opacity .2s ease, transform .2s ease;
+          z-index:9999;
+        }
+        .global-toast.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+
         @media (max-width:900px){
           .main-content.split{flex-direction:column;gap:18px;padding:24px}
           .left-panel{flex:0 0 260px;border-radius:12px;padding:18px}

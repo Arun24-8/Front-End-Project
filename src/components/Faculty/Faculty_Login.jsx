@@ -1,10 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Faculty_Login({ onNavigate }) {
 	const [userId, setUserId] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [remember, setRemember] = useState(false);
+
+	// captcha
+	const capchCharsF = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	const [runCpach, setCapcha] = useState("");
+	const [enteredCaptcha, setEnteredCaptcha] = useState("");
+	const [captchaError, setCaptchaError] = useState("");
+
+	useEffect(() => { generateCaptcha(); }, []);
+	function generateCaptcha() {
+		let s = ""; for (let i=0;i<6;i++) s += capchCharsF[Math.floor(Math.random()*capchCharsF.length)];
+		setCapcha(s); setEnteredCaptcha(""); setCaptchaError("");
+	}
 
 	// allowed faculty credentials for local testing
 	const allowedFaculty = [
@@ -14,18 +26,12 @@ export default function Faculty_Login({ onNavigate }) {
 
 	const handleSignIn = () => {
 		setError("");
-		if (!userId.trim()) {
-			setError("Username cannot be blank.");
-			return;
-		}
-		if (!password.trim()) {
-			setError("Password cannot be blank.");
-			return;
-		}
-		if (password.length < 6) {
-			setError("Password must be at least 6 characters.");
-			return;
-		}
+		if (!enteredCaptcha.trim()) { setCaptchaError("Please enter verification code."); return; }
+		if (enteredCaptcha !== runCpach) { setCaptchaError("The verification code is incorrect."); return; }
+		setCaptchaError("");
+		if (!userId.trim()) { setError("Username cannot be blank."); return; }
+		if (!password.trim()) { setError("Password cannot be blank."); return; }
+		if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
 		const ok = allowedFaculty.find(u => u.username === userId && u.password === password);
 		if (!ok) { setError("Invalid username or password."); return; }
 
@@ -35,7 +41,18 @@ export default function Faculty_Login({ onNavigate }) {
 
 	const submit = async (e) => {
 		if (e && e.preventDefault) e.preventDefault();
-		handleSignIn();
+		setError("");
+		if (!enteredCaptcha.trim()) { setCaptchaError("Please enter verification code."); return; }
+		if (enteredCaptcha !== runCpach) { setCaptchaError("The verification code is incorrect."); return; }
+		setCaptchaError("");
+		if (!userId.trim()) { setError("Username cannot be blank."); return; }
+		if (!password.trim()) { setError("Password cannot be blank."); return; }
+		if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+		const ok = allowedFaculty.find(u => u.username === userId && u.password === password);
+		if (!ok) { setError("Invalid username or password."); return; }
+
+		try { localStorage.setItem("facultyData", JSON.stringify({ id: userId })); } catch {}
+		if (typeof onNavigate === "function") onNavigate("/faculty"); else try { window.history.pushState({}, "", "/faculty"); } catch {}
 	};
 
 	return (
@@ -72,6 +89,20 @@ export default function Faculty_Login({ onNavigate }) {
 
 					<label style={{ display:"block", fontWeight:700, color:"#374151", marginBottom:6 }}>Password</label>
 					<input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} onKeyDown={(e)=>e.key==="Enter"&&submit()} style={{ width:"100%", padding:12, borderRadius:8, border:"1px solid #e6eef8", marginBottom:12 }} placeholder="Enter your password" />
+
+					<div style={{ background: "#f8fafc", border: "1px solid #e6eef8", padding: 10, borderRadius: 8, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 13, color: "#374151" }}>
+                <strong>Demo:</strong> faculty1 / fac123456
+              </div>
+              <button type="button" onClick={() => { try { navigator.clipboard.writeText("faculty1:fac123456"); } catch{} }} style={{ padding: "6px 10px", borderRadius: 8, border: "none", background: "#eef2ff", color: "#4f46e5", cursor: "pointer", fontWeight:700 }}>Copy</button>
+            </div>
+
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+              <input readOnly value={runCpach} style={{ padding:10, borderRadius:8, border:"1px solid #e6eef8", width:120, textAlign:"center", background:"#f3f4f6" }} />
+              <button type="button" className="btn btn-light" onClick={generateCaptcha}>🔄</button>
+              <input className="form-control" placeholder="Enter verification Code" value={enteredCaptcha} onChange={(e)=>setEnteredCaptcha(e.target.value)} style={{ marginLeft:8 }} />
+            </div>
+            {captchaError && <div style={{ color:"#b91c1c", marginTop:6 }}>{captchaError}</div>}
 
 					<div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
 						<label style={{ display:"flex", alignItems:"center", gap:8 }}>

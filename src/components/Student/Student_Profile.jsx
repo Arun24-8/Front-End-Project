@@ -11,7 +11,7 @@ export default function Student_Profile() {
 				return;
 			}
 		} catch (e) {}
-		// fallback: ensure Sai is shown if nothing in storage
+		
 		setStudent({
 			name: "Sai",
 			id: "S001",

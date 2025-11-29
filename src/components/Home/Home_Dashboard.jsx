@@ -10,7 +10,7 @@ const Home_Dashboard = ({ onNavigate }) => {
     <div className="app-container">
       <header>
         <div className="header-content">
-          <h1>Student Portal</h1>
+          <h1>University Portal</h1>
           <p>Welcome to the University Management System</p>
         </div>
 
@@ -21,238 +21,135 @@ const Home_Dashboard = ({ onNavigate }) => {
         )}
       </header>
 
-      <main className="main-content">
-        {!showRoles ? (
-          <div className="login-screen">
-            <h2 className="welcome-text">👋 Welcome to the Student Portal</h2>
-            <p className="description">
-              Access your personalized dashboard and explore everything you need —
-              courses, grades, and progress — all in one place.
-            </p>
-            <button className="login-btn" onClick={handleLoginClick}>
-              Get Started →
-            </button>
+      <main className="main-content split">
+        <div className="left-panel" aria-hidden>
+          <div className="left-inner">
+            <img
+              src="/src/components/Home/kl logo.jpg"
+              alt="KLU logo"
+              className="big-logo"
+            />
           </div>
-        ) : (
-          <div className="center-content">
-            <h2 className="text-default">Select Your Dashboard</h2>
-            <p className="text-gray">
-              Choose your role to continue to the appropriate portal.
-            </p>
+        </div>
 
-            <div className="card-container">
-              <div
-                className="card blue"
-                role="button"
-                aria-label="Student Login"
-                onClick={() => onNavigate("/student/login")}
-              >
-                <div className="emoji">🎓</div>
-                <h3>Student</h3>
-                <p style={{ color: "black" }}>
-                  Access your courses, grades, and assignments easily.
-                </p>
-              </div>
+        <div className="right-panel">
+          {!showRoles ? (
+            <div className="login-screen card">
+              <h2 className="welcome-text">👋 Welcome to the University Portal</h2>
+              <p className="description">
+                Access your personalized dashboard and explore everything you need —
+                courses, grades, and progress — all in one place.
+              </p>
+              <button className="login-btn" onClick={handleLoginClick}>
+                Get Started →
+              </button>
+            </div>
+          ) : (
+            <div className="center-content card">
+              <h2 className="text-default">Select Your Dashboard</h2>
+              <p className="text-gray">
+                Choose your role to continue to the appropriate portal.
+              </p>
 
-              <div
-                className="card green"
-                role="button"
-                aria-label="Faculty Login"
-                onClick={() => onNavigate("/faculty/login")}
-              >
-                <div className="emoji">👨‍🏫</div>
-                <h3>Faculty</h3>
-                <p style={{ color: "black" }}>
-                  Manage classes, upload materials, and evaluate students.
-                </p>
-              </div>
+              <div className="card-container">
+                <div
+                  className="card role"
+                  role="button"
+                  aria-label="Student Login"
+                  onClick={() => onNavigate("/student/login")}
+                >
+                  <div className="emoji">🎓</div>
+                  <h3>Student</h3>
+                  <p>Access your courses, grades, and assignments easily.</p>
+                </div>
 
-              <div
-                className="card purple"
-                role="button"
-                aria-label="Admin Login"
-                onClick={() => onNavigate("/admin/login")}
-              >
-                <div className="emoji">⚙️</div>
-                <h3>Admin</h3>
-                <p style={{ color: "black" }}>
-                  Oversee platform settings and manage user accounts.
-                </p>
+                <div
+                  className="card role"
+                  role="button"
+                  aria-label="Faculty Login"
+                  onClick={() => onNavigate("/faculty/login")}
+                >
+                  <div className="emoji">👨‍🏫</div>
+                  <h3>Faculty</h3>
+                  <p>Manage classes, upload materials, and evaluate students.</p>
+                </div>
+
+                <div
+                  className="card role"
+                  role="button"
+                  aria-label="Admin Login"
+                  onClick={() => onNavigate("/admin/login")}
+                >
+                  <div className="emoji">⚙️</div>
+                  <h3>Admin</h3>
+                  <p>Oversee platform settings and manage user accounts.</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
 
       <style>{`
-        * {
-          box-sizing: border-box;
-        }
+        *{box-sizing:border-box}
+        body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#eef2ff,#f5f3ff);color:#1f2937}
+        .app-container{display:flex;flex-direction:column;min-height:100vh}
+        header{position:relative;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:28px 20px;text-align:center;overflow:hidden}
+        .header-content{position:relative;z-index:2}
+        .header-content h1{margin:0;font-size:28px}
+        .header-content p{margin:6px 0 0;color:rgba(224,231,255,0.95)}
+        .home-btn{position:absolute;right:20px;top:22px;background:#fff;color:#4f46e5;font-weight:700;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;z-index:3;box-shadow:0 8px 20px rgba(2,6,23,0.08)}
+        .main-content.split{display:flex;gap:24px;padding:36px 20px;flex:1;align-items:stretch}
 
-        body {
-          margin: 0;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #eef2ff, #f5f3ff);
-          color: #1f2937;
+        /* updated: make left logo area match the right example (larger, centered) */
+        .left-panel{
+          flex:1 1 60%;
+          background:#ffffff;
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:center;
+          border-radius:14px;
+          padding:48px; /* more breathing room so logo appears centered like example */
+          position:relative;
+          overflow:hidden;
         }
-
-        .app-container {
-          display: flex;
-          flex-direction: column;
-          min-height: 100vh;
+        .left-inner{
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          flex:1;
+          padding:8px;
+          width:100%;
+          height:100%;
         }
-
-        header {
-          position: relative;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 30px 20px;
-          text-align: center;
+        .big-logo{
+          display:block;
+          width:auto;
+          max-width:520px;    /* match the large visual in the second screenshot */
+          max-height:80vh;    /* allow tall viewport usage but keep aspect ratio */
+          height:auto;
+          object-fit:contain;
+          opacity:1;
+          filter:none;
         }
+        .left-footer{font-size:12px;color:rgba(15,23,42,0.8);margin-top:12px}
 
-        .header-content h1 {
-          margin: 0;
-          font-size: 32px;
-        }
-
-        .header-content p {
-          margin-top: 5px;
-          color: #e0e7ff;
-        }
-
-        .home-btn {
-          position: absolute;
-          right: 20px;
-          top: 25px;
-          background-color: white;
-          color: #4f46e5;
-          font-weight: bold;
-          border: none;
-          border-radius: 8px;
-          padding: 10px 18px;
-          cursor: pointer;
-          transition: background 0.2s, transform 0.2s;
-        }
-
-        .home-btn:hover {
-          background-color: #f3f4f6;
-          transform: translateY(-2px);
-        }
-
-        .main-content {
-          flex-grow: 1;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 40px 20px;
-        }
-
-        /* --- Login screen --- */
-        .login-screen {
-          text-align: center;
-          max-width: 480px;
-          background: white;
-          padding: 40px 30px;
-          border-radius: 16px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-        }
-
-        .welcome-text {
-          font-size: 30px;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 12px;
-        }
-
-        .description {
-          font-size: 16px;
-          color: #374151;
-          margin-bottom: 30px;
-          line-height: 1.6;
-        }
-
-        .login-btn {
-          background: linear-gradient(to right, #4f46e5, #7c3aed);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          padding: 14px 28px;
-          font-size: 17px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .login-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        }
-
-        /* --- Role cards --- */
-        .center-content {
-          text-align: center;
-          max-width: 1000px;
-          width: 100%;
-        }
-
-        .text-default {
-          font-size: 28px;
-          font-weight: bold;
-          margin-bottom: 10px;
-        }
-
-        .text-gray {
-          color: #6b7280;
-          margin-bottom: 30px;
-        }
-
-        .card-container {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 20px;
-          margin-top: 20px;
-        }
-
-        .card {
-          border-radius: 16px;
-          padding: 30px;
-          background: white;
-          color: black;
-          border: 2px solid transparent;
-          transition: transform 0.3s, box-shadow 0.3s, border 0.3s;
-        }
-
-        .card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-          border: 2px solid #6366f1;
-        }
-
-        .emoji {
-          font-size: 48px;
-          margin-bottom: 15px;
-        }
-
-        .card h3 {
-          font-size: 22px;
-          margin-bottom: 10px;
-        }
-
-        .card p {
-          font-size: 15px;
-          line-height: 1.6;
-          margin: 10px 0;
-        }
-
-        /* NEW: ensure links wrapping cards don't underline and card text has no underline */
-        .card-link {
-          text-decoration: none;
-          color: inherit;
-          display: block;
-        }
-
-        .card, .card h3, .card p {
-          text-decoration: none;
+        .right-panel{flex:0 0 420px;display:flex;align-items:center;justify-content:center}
+        .card{background:#fff;border-radius:12px;padding:28px;box-shadow:0 18px 40px rgba(2,6,23,0.08);width:100%;max-width:420px}
+        .login-screen{max-width:420px;text-align:center}
+        .welcome-text{font-size:22px;margin:0 0 8px 0}
+        .description{color:#374151;margin:0 0 16px 0;line-height:1.5}
+        .login-btn{background:linear-gradient(90deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer}
+        .center-content .card-container{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+        .role{display:flex;flex-direction:row;gap:12px;align-items:center}
+        .role .emoji{font-size:28px;width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.02))}
+        .role h3{margin:0;font-size:16px}
+        .role p{margin:0;color:#374151;font-size:14px}
+        @media (max-width:900px){
+          .main-content.split{flex-direction:column;gap:18px;padding:24px}
+          .left-panel{flex:0 0 260px;border-radius:12px;padding:18px}
+          .right-panel{flex:1 1 auto}
         }
       `}</style>
     </div>

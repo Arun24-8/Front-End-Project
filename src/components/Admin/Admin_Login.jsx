@@ -1,96 +1,106 @@
 import React, { useState } from "react";
 
 export default function Admin_Login({ onNavigate }) {
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
+	const [userId, setUserId] = useState("");
+	const [password, setPassword] = useState("");
+	const [err, setErr] = useState("");
+	const [remember, setRemember] = useState(false);
 
-  const handleSignIn = () => {
-    setLoginError("");
-    if (!userId.trim() || !password.trim()) {
-      setLoginError("Please enter both User ID and Password.");
-      return;
-    }
-    // Simulated admin login
-    if (typeof onNavigate === "function") onNavigate("/admin");
-  };
+	// allowed admin credentials for local testing
+	const allowedAdmins = [
+		{ username: "admin", password: "admin123" },
+		{ username: "superadmin", password: "super1234" }
+	];
 
-  return (
-    <div className="admin-login-page">
-      <header className="login-header">
-        <div className="header-inner">
-          <h1 className="title">Admin Portal</h1>
-          <p className="subtitle">Sign in to manage the system.</p>
-        </div>
-      </header>
+	const handleSignIn = async (e) => {
+		if (e && e.preventDefault) e.preventDefault();
+		setErr("");
+		if (!userId.trim()) { setErr("Please enter User ID."); return; }
+		if (!password.trim()) { setErr("Please enter Password."); return; }
+		if (password.length < 6) { setErr("Password must be at least 6 characters."); return; }
 
-      <div className="content-wrap">
-        <div className="card-wrap">
-          <div className="card">
-            <h3 className="card-title">Admin Sign In</h3>
+		const ok = allowedAdmins.find(u => u.username === userId && u.password === password);
+		if (!ok) { setErr("Invalid username or password."); return; }
 
-            <div className="form-block">
-              <div className="field">
-                <label className="label" htmlFor="admin-userid">
-                  User ID
-                </label>
-                <input
-                  id="admin-userid"
-                  type="text"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  placeholder="Enter admin User ID"
-                  className="input"
-                  onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
-                />
-              </div>
+		try { localStorage.setItem("adminData", JSON.stringify({ id: userId })); } catch {}
+		if (typeof onNavigate === "function") onNavigate("/admin"); else try { window.history.pushState({}, "", "/admin"); } catch {}
+	};
 
-              <div className="field">
-                <label className="label" htmlFor="admin-password">
-                  Password
-                </label>
-                <input
-                  id="admin-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="********"
-                  className="input"
-                  onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
-                />
-              </div>
+	return (
+		<div style={{ minHeight: "100vh", display: "flex", gap: 24, alignItems: "stretch", padding: 20, boxSizing: "border-box", fontFamily: "Segoe UI, Inter, system-ui" }}>
+			<div style={{ flex: 1, background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 12, padding: 18 }}>
+				<img src="/src/components/Home/kl logo.jpg" alt="KLU" style={{ maxWidth: "70%", height: "auto", display: "block" }} />
+			</div>
 
-              {loginError && <div className="error">{loginError}</div>}
+			<div style={{ width: "100%", maxWidth: 480, display: "flex", alignItems: "center", justifyContent: "center" }}>
+				<div style={{
+					width: "100%",
+					background: "#fff",
+					padding: 28,
+					borderRadius: 12,
+					boxShadow: "0 18px 40px rgba(2,6,23,0.06)",
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "center",
+					alignItems: "stretch",
+					minHeight: 560,
+					height: "68vh",
+					boxSizing: "border-box"
+				}}>
+					<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+						<div style={{ width: 56, height: 56, borderRadius: 10, background: "linear-gradient(90deg,#4f46e5,#7c3aed)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>KL</div>
+						<div>
+							<div style={{ fontSize: 18, fontWeight: 800 }}>Admin Portal</div>
+							<div style={{ color: "#6b7280", fontSize: 13 }}>Manage the system and users</div>
+						</div>
+					</div>
 
-              <button onClick={handleSignIn} className="btn-primary">
-                Sign In
-              </button>
-            </div>
+					<div style={{ marginBottom: 12 }}>
+						<label style={{ display: "block", fontWeight: 700, color: "#374151", marginBottom: 6 }}>User ID</label>
+						<input
+							value={userId}
+							onChange={(e) => setUserId(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+							placeholder="admin@university.edu"
+							style={{ width: "100%", padding: 12, borderRadius: 10, border: "1px solid #e6eef8", outline: "none", fontSize: 14 }}
+						/>
+					</div>
 
-            <p className="footnote">Only authorized admins may sign in.</p>
-          </div>
-        </div>
-      </div>
+					<div style={{ marginBottom: 8 }}>
+						<label style={{ display: "block", fontWeight: 700, color: "#374151", marginBottom: 6 }}>Password</label>
+						<input
+							type="password"
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+							placeholder="Enter your password"
+							style={{ width: "100%", padding: 12, borderRadius: 10, border: "1px solid #e6eef8", outline: "none", fontSize: 14 }}
+						/>
+					</div>
 
-      <style>{`
-        /* filepath: c:\\Users\\HP\\OneDrive\\Desktop\\FrontEnd\\Sdp-13\\src\\components\\Admin\\Admin_Login.jsx */
-        .admin-login-page { min-height:100vh; display:flex; flex-direction:column; align-items:center; background:#f6f7fb; padding-bottom:64px; font-family:Inter,system-ui,Segoe UI,Roboto,Arial; }
-        .login-header { width:100%; padding:48px 0 24px; }
-        .header-inner { max-width:960px; margin:0 auto; text-align:center; padding:0 16px; }
-        .title { font-size:32px; font-weight:800; color:#111827; margin:0; }
-        .subtitle { margin-top:8px; color:#6b7280; }
-        .content-wrap { width:100%; padding:0 16px; }
-        .card-wrap { max-width:420px; margin:0 auto; }
-        .card { background:#fff; border-radius:12px; padding:28px; border:1px solid #e5e7eb; box-shadow:0 10px 30px rgba(0,0,0,0.06); }
-        .card-title { font-size:20px; text-align:center; margin-bottom:18px; font-weight:700; color:#111827; }
-        .field{margin-bottom:14px} .label{display:block;font-size:13px;color:#374151;margin-bottom:6px;font-weight:600}
-        .input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #d1d5db;outline:none}
-        .input:focus{border-color:#1e40af;box-shadow:0 0 0 4px rgba(30,64,175,0.08)}
-        .error{color:#b91c1c;background:#fee2e2;padding:10px;border-radius:8px;margin-bottom:12px}
-        .btn-primary{width:100%;background:#1e40af;color:#fff;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
-        .btn-primary:hover{background:#153e75}
-        .footnote{margin-top:12px;color:#6b7280;text-align:center;font-size:13px}
+					<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 8 }}>
+						<label style={{ display: "flex", alignItems: "center", gap: 8, color: "#374151", cursor: "pointer" }}>
+							<input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+							<span style={{ fontSize: 13 }}>Remember me</span>
+						</label>
+						<a href="#" style={{ color: "#4f46e5", textDecoration: "none", fontSize: 13 }} onClick={(e) => e.preventDefault()}>Forgot?</a>
+					</div>
+
+					{err && <div style={{ marginTop: 12, color: "#b91c1c", fontWeight: 700 }}>{err}</div>}
+
+					<div style={{ marginTop: 16 }}>
+						<button onClick={handleSignIn} style={{ width: "100%", padding: 12, borderRadius: 10, border: "none", background: "linear-gradient(90deg,#16a34a,#059669)", color: "#fff", fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 22px rgba(6,95,70,0.12)" }}>
+							Sign In
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<style>{`
+        @media (max-width:900px){
+          div[style*="minHeight:"]{flex-direction:column}
+        }
       `}</style>
-    </div>
-  );
+		</div>
+	);
 }

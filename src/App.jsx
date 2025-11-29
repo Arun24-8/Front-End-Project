@@ -62,13 +62,13 @@ export default function App() {
     "/student": () =>
       <SafeLoad
         loader={() => import("./components/Student/Student_Dashboard.jsx")}
-        loaderProps={{}}
+        loaderProps={{ onNavigate: navigate }}            // <-- pass navigate
         fallback={<div style={{ padding: 16 }}>Student dashboard not available.</div>}
       />,
     "/student/profile": () =>
       <SafeLoad
         loader={() => import("./components/Student/Student_Profile.jsx")}
-        loaderProps={{}}
+        loaderProps={{ onNavigate: navigate }}            // <-- pass navigate
         fallback={<div style={{ padding: 16 }}>Profile page not available.</div>}
       />,
   };

@@ -1,119 +1,102 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Student_Login({ onNavigate }) {
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
+	const [userId, setUserId] = useState("");
+	const [password, setPassword] = useState("");
+	const [error, setError] = useState("");
+	const [remember, setRemember] = useState(false);
 
-  const handleSignIn = () => {
-    setLoginError("");
-    if (!userId.trim() || !password.trim()) {
-      setLoginError("Please enter both User ID and Password.");
-      return;
-    }
+	// add a small list of allowed student credentials for local testing
+	const allowedStudents = [
+		{ username: "sai", password: "sai123456" },
+		{ username: "student1", password: "stud1234" }
+	];
 
-    // Simulate authentication: accept any non-empty credentials for dev.
-    // Persist minimal student data so Student_Dashboard can load it.
-    const student = {
-      name: userId.includes(" ") ? userId : `${userId.split(".")[0] || userId}`.replace(/[_\-\.]/g, " "),
-      id: userId,
-      program: "B.Tech Computer Science",
-      semester: "6th Semester",
-      year: "2023-2024",
-    };
-    try {
-      localStorage.setItem("studentData", JSON.stringify(student));
-    } catch (e) {
-      // ignore storage errors
-    }
+	const handleSignIn = async (e) => {
+		// if this was a form submit event
+		if (e && e.preventDefault) e.preventDefault();
 
-    if (typeof onNavigate === "function") onNavigate("/student");
-  };
+		setError("");
+		if (!userId.trim()) { setError("Username cannot be blank."); return; }
+		if (!password.trim()) { setError("Password cannot be blank."); return; }
+		if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
 
-  return (
-    <div className="student-login-page">
-      <header className="login-header">
-        <div className="header-inner">
-          <h1 className="title">
-            Welcome to the Student
-            <br />
-            Portal
-          </h1>
-          <p className="subtitle">Sign in to access your dashboard.</p>
-        </div>
-      </header>
+		// validate against allowed credentials
+		const match = allowedStudents.find(u => u.username === userId && u.password === password);
+		if (!match) {
+			setError("Invalid username or password.");
+			return;
+		}
 
-      <div className="content-wrap">
-        <div className="card-wrap">
-          <div className="card">
-            <h3 className="card-title">Student Sign In</h3>
+		// successful login - persist Sai profile (or real flow) and navigate
+		const saiProfile = {
+			name: "Sai",
+			id: "S001",
+			program: "B.Tech Computer Science",
+			email: userId,
+			phone: "+91 90000 00000",
+			year: "3rd Year",
+			roll: "2024CSE001"
+		};
+		try { localStorage.setItem("studentData", JSON.stringify(saiProfile)); } catch {}
+		if (typeof onNavigate === "function") onNavigate("/student"); else try { window.history.pushState({}, "", "/student"); } catch {}
+	};
 
-            <div className="form-block">
-              <div className="field">
-                <label className="label" htmlFor="userid">
-                  User ID
-                </label>
-                <input
-                  id="userid"
-                  type="text"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  placeholder="Enter your User ID"
-                  className="input"
-                  onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
-                />
-              </div>
+	return (
+		<div style={{ minHeight: "100vh", display: "flex", gap: 24, alignItems: "stretch", padding: 20, boxSizing: "border-box", fontFamily: "Segoe UI, Inter, system-ui" }}>
+			<div style={{ flex:1, background:"#fff", display:"flex", alignItems:"center", justifyContent:"center", borderRadius:12 }}>
+				<img src="/src/components/Home/kl logo.jpg" alt="KLU" style={{ maxWidth:"60%", maxHeight:"60%", opacity:0.95 }} />
+			</div>
 
-              <div className="field">
-                <label className="label" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="********"
-                  className="input"
-                  onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
-                />
-              </div>
+			<div style={{ width: "100%", maxWidth: 480, display:"flex", alignItems:"center", justifyContent:"center" }}>
+				<div style={{
+					width: "100%",
+					background: "#fff",
+					padding: 28,
+					borderRadius: 12,
+					boxShadow: "0 18px 40px rgba(2,6,23,0.08)",
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "center",
+					alignItems: "stretch",
+					minHeight: 560,
+					height: "68vh",
+					boxSizing: "border-box"
+				}}>
+					<div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+						<div style={{ width:48,height:48,borderRadius:10,background:"linear-gradient(90deg,#4f46e5,#7c3aed)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800 }}>KL</div>
+						<div>
+							<div style={{ fontSize:18,fontWeight:800 }}>University Portal</div>
+							<div style={{ color:"#6b7280", fontSize:13 }}>Student Sign in</div>
+						</div>
+					</div>
 
-              {loginError && <div className="error">{loginError}</div>}
+					<label style={{ display:"block", fontWeight:700, color:"#374151", marginBottom:6 }}>User ID</label>
+					<input value={userId} onChange={(e)=>setUserId(e.target.value)} onKeyDown={(e)=>e.key==="Enter"&&handleSignIn()} placeholder="student@university.edu or 2024CSE001" style={{ width:"100%", padding:12, borderRadius:8, border:"1px solid #e6eef8", marginBottom:12 }} />
 
-              <button onClick={handleSignIn} className="btn-primary">
-                Sign In
-              </button>
-            </div>
+					<label style={{ display:"block", fontWeight:700, color:"#374151", marginBottom:6 }}>Password</label>
+					<input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} onKeyDown={(e)=>e.key==="Enter"&&handleSignIn()} placeholder="Enter your password" style={{ width:"100%", padding:12, borderRadius:8, border:"1px solid #e6eef8", marginBottom:12 }} />
 
-            <p className="footnote">
-              Need an account? Contact your administrator.
-            </p>
-          </div>
-        </div>
-      </div>
+					<div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+						<label style={{ display:"flex", alignItems:"center", gap:8 }}>
+							<input type="checkbox" checked={remember} onChange={(e)=>setRemember(e.target.checked)} />
+							<span style={{ fontSize:13 }}>Remember me</span>
+						</label>
+						<a href="#" onClick={(e)=>e.preventDefault()} style={{ color:"#4f46e5", fontSize:13 }}>Forgot?</a>
+					</div>
 
-      <style>{`
-        /* filepath: c:\\Users\\HP\\OneDrive\\Desktop\\FrontEnd\\Sdp-13\\src\\components\\Student\\Student_login.jsx */
-        .student-login-page { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding-bottom:64px; background:#f6f7fb; font-family:Inter,system-ui,Segoe UI,Roboto,Arial; }
-        .login-header { width:100%; padding-top:48px; padding-bottom:24px; }
-        .header-inner { max-width:960px; margin:0 auto; text-align:center; padding:0 16px; }
-        .title { font-size:36px; line-height:1.05; font-weight:800; color:#111827; margin:0; }
-        .subtitle { margin-top:12px; color:#6b7280; font-size:14px; }
-        .content-wrap { width:100%; padding:0 16px; }
-        .card-wrap { max-width:400px; margin:0 auto; }
-        .card { background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(40,44,52,0.08); border:1px solid #e5e7eb; padding:30px 32px; }
-        .card-title { font-size:24px; font-weight:700; margin-bottom:24px; text-align:center; color:#111827; }
-        .field { margin-bottom:18px; }
-        .label { display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px; }
-        .input { width:100%; padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; font-size:15px; color:#111827; outline:none; box-shadow:inset 0 1px 3px rgba(0,0,0,0.05); transition:border-color .2s, box-shadow .2s; }
-        .input:focus { border-color:#3b82f6; box-shadow:0 0 0 4px rgba(59,130,246,0.12); }
-        .error { color:#b91c1c; background:#fee2e2; border:1px solid #fca5a5; padding:12px; border-radius:8px; margin-bottom:18px; font-size:13px; font-weight:500; }
-        .btn-primary { width:100%; background:#3b82f6; color:#fff; padding:15px 16px; border-radius:12px; border:none; font-weight:700; font-size:16px; cursor:pointer; box-shadow:0 4px 6px rgba(59,130,246,0.3); transition:transform .1s, background .2s; }
-        .btn-primary:hover { background:#2563eb; transform:translateY(-1px); }
-        .footnote { margin-top:24px; font-size:13px; color:#6b7280; text-align:center; }
-        @media (max-width:640px) { .title{font-size:32px} .card { padding:24px; border-radius:12px } }
-      `}</style>
-    </div>
-  );
+					{error && <div style={{ color:"#b91c1c", fontWeight:700, marginBottom:12 }}>{error}</div>}
+
+					<button onClick={handleSignIn} style={{ width:"100%", padding:12, borderRadius:8, border:"none", background:"linear-gradient(90deg,#4f46e5,#7c3aed)", color:"#fff", fontWeight:800, cursor:"pointer" }}>Sign In</button>
+				</div>
+			</div>
+
+			<style>{`
+				@media (max-width:900px){
+					div[style*="minHeight:"]{flex-direction:column}
+					.left-panel, img{max-width:40%}
+				}
+			`}</style>
+		</div>
+	);
 }
